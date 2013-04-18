@@ -18,38 +18,31 @@ sub bcrypt {
         or die "Program failed; error $!, wait status $?\n";
 }
 
-# Accepts one argument: the full path to a directory.
-# Returns: A list of files that reside in that path.
-sub process_files {
+sub get_filenames_recursive {
     my $path = shift;
 
     opendir (DIR, $path)
         or die "Unable to open $path: $!";
 
-    # This is the same as:
-    # LIST = map(EXP, grep(EXP, readdir()))
     my @files =
-        # Third: Prepend the full path
+        # third: prepend full path
         map { $path . '/' . $_ }
-        # Second: take out '.' and '..'
+        # second: remove . and ..
         grep { !/^\.{1,2}$/ }
-        # First: get all files
+        # get all files
         readdir (DIR);
 
     closedir (DIR);
 
     for my $i (0 .. $#files) {
         if (-d $files[$i]) {
-            # Add all of the new files from this directory
-            # (and its subdirectories, and so on... if any)
+            # recurisvely handle subdirectories
             push @files, process_files ($files[$i]);
 	    splice @files, $i, 1;
-
-        } else {
-            # Do whatever you want here =) .. if anything.
         }
     }
-    # NOTE: we're returning the list of files
+    
+    # return list of files
     return @files;
 }
 
@@ -75,7 +68,7 @@ if ($passphrase ne $passphrase2) {
     exit;
 }
 
-my @files = process_files $ARGV[0];
+my @files = get_filenames_recursive $ARGV[0];
 for (@files) {
     my $doing = "Encrypting";
     if ($_ =~ /\.bfe$/) {
