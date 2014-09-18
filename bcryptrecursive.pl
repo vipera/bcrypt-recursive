@@ -37,7 +37,7 @@ sub get_filenames_recursive {
     for my $i (0 .. $#files) {
         if (-d $files[$i]) {
             # recurisvely handle subdirectories
-            push @files, process_files ($files[$i]);
+            push @files, get_filenames_recursive ($files[$i]);
 	    splice @files, $i, 1;
         }
     }
